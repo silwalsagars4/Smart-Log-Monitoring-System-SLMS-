@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-surface-900 text-slate-100 font-sans;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,0.12), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 80%, rgba(192,132,252,0.06), transparent);
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-surface-800; }
+  ::-webkit-scrollbar-thumb { @apply bg-surface-500 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-brand-600; }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-800 border border-surface-600 rounded-xl p-5 shadow-xl;
+  }
+  .card-header {
+    @apply flex items-center justify-between mb-4;
+  }
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface-900;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 hover:bg-brand-500 text-white focus:ring-brand-500;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-surface-700 text-slate-400 hover:text-white;
+  }
+  .btn-danger {
+    @apply btn bg-red-600/20 hover:bg-red-600/40 text-red-400 hover:text-red-300 border border-red-600/30;
+  }
+  .input {
+    @apply w-full bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide;
+  }
+  .table-row-hover {
+    @apply hover:bg-surface-700/50 transition-colors duration-150;
+  }
+  .stat-card {
+    @apply card flex flex-col gap-2 hover:border-brand-600/40 transition-colors duration-200;
+  }
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150;
+  }
+  .nav-item-active {
+    @apply nav-item bg-brand-600/20 text-brand-400 border border-brand-600/30;
+  }
+  .nav-item-inactive {
+    @apply nav-item text-slate-400 hover:text-white hover:bg-surface-700;
+  }
+  .severity-dot {
+    @apply w-2 h-2 rounded-full flex-shrink-0;
+  }
+  .glow-brand {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+}

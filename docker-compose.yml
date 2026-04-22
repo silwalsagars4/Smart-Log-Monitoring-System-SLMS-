@@ -1,0 +1,125 @@
+
+
+networks:
+  slms-net:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  postgres-data:
+  redis-data:
+  geoip-data:
+  ml-models:
+
+services:
+  # ── Infrastructure ─────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: slms-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - slms-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:7
+    container_name: slms-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-slms}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-slmspassword}
+      MONGO_INITDB_DATABASE: slms
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - slms-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]  # ✅ use mongo not mongosh
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: slms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: slms
+      POSTGRES_USER: ${POSTGRES_USER:-slms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-slmspassword}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - slms-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-slms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend ────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: slms-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+      MONGO_URL: mongodb://${MONGO_USER:-slms}:${MONGO_PASSWORD:-slmspassword}@mongo:27017/slms?authSource=admin
+      POSTGRES_URL: postgresql+asyncpg://${POSTGRES_USER:-slms}:${POSTGRES_PASSWORD:-slmspassword}@postgres:5432/slms
+    volumes:
+      - ml-models:/app/models
+      - geoip-data:/app/geoip
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - slms-net
+
+  # ── Log Agents ─────────────────────────────────────────────────────────────
+  agents:
+    build:
+      context: ./agents
+      dockerfile: Dockerfile
+    container_name: slms-agents
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - /var/log:/host/var/log:ro
+      - /var/lib/docker/containers:/host/docker/containers:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - slms-net
+
+  # ── Frontend ───────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: slms-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - slms-net
