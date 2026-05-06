@@ -41,7 +41,7 @@ services:
     networks:
       - slms-net
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]  # ✅ use mongo not mongosh
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -76,11 +76,12 @@ services:
       REDIS_URL: redis://redis:6379
       MONGO_URL: mongodb://${MONGO_USER:-slms}:${MONGO_PASSWORD:-slmspassword}@mongo:27017/slms?authSource=admin
       POSTGRES_URL: postgresql+asyncpg://${POSTGRES_USER:-slms}:${POSTGRES_PASSWORD:-slmspassword}@postgres:5432/slms
+      ML_MODEL_DIR: /app/ml_data
     volumes:
-      - ml-models:/app/models
+      - ml-models:/app/ml_data
       - geoip-data:/app/geoip
     ports:
-      - "8000:8000"
+      - "8001:8000"
     depends_on:
       redis:
         condition: service_healthy
@@ -101,9 +102,11 @@ services:
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379
+      BACKEND_URL: http://backend:8000
     volumes:
       - /var/log:/host/var/log:ro
       - /var/lib/docker/containers:/host/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -118,7 +121,7 @@ services:
     container_name: slms-frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "3001:80"
     depends_on:
       - backend
     networks:

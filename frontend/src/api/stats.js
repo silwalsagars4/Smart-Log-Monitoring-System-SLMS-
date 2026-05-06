@@ -7,3 +7,5 @@ export const getSeverityTrend = (hours = 24) => api.get('/stats/severity-trend',
 export const getAlerts = (params = {}) => api.get('/alerts', { params })
 export const acknowledgeAlert = (id) => api.patch(`/alerts/${id}/acknowledge`)
 export const deleteAlert = (id) => api.delete(`/alerts/${id}`)
+export const getInteractions = (id) => api.get(`/alerts/${id}/interactions`)
+export const postComment = (id, message) => api.post(`/alerts/${id}/comment`, { message })

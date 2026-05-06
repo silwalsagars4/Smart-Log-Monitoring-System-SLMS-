@@ -7,7 +7,7 @@ from typing import Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from middleware.auth_middleware import get_current_user
+from middleware.auth_middleware import get_current_user, require_admin, require_any_authenticated
 from middleware.rate_limiter import limiter
 from models.db_models import User
 from models.schemas import LogsResponse, LogIngest
@@ -31,7 +31,7 @@ async def get_logs(
     from_ts: Optional[str] = Query(None),
     to_ts: Optional[str] = Query(None),
     is_anomaly: Optional[bool] = Query(None),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_any_authenticated),
 ):
     db = get_db()
     query: dict = {}
@@ -65,7 +65,7 @@ async def get_logs(
 
 @router.post("/ingest", status_code=202)
 @limiter.limit("1000/minute")
-async def ingest_log(request: Request, body: LogIngest, current_user: User = Depends(get_current_user)):
+async def ingest_log(request: Request, body: LogIngest, current_user: User = Depends(require_admin)):
     """Direct log ingestion endpoint (bypasses agents — useful for custom integrations)."""
     from services.feature_engineer import FeatureEngineer
     from services.ml_engine import get_ml_engine
@@ -95,7 +95,7 @@ async def ingest_log(request: Request, body: LogIngest, current_user: User = Dep
 
 
 @router.get("/{log_id}")
-async def get_log(log_id: str, current_user: User = Depends(get_current_user)):
+async def get_log(log_id: str, current_user: User = Depends(require_any_authenticated)):
     db = get_db()
     try:
         doc = await db["logs"].find_one({"_id": ObjectId(log_id)})

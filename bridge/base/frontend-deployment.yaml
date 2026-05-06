@@ -1,0 +1,33 @@
+#! frontend-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: frontend
+    namespace: slms
+    labels:
+        com.docker.compose.project: slms
+        com.docker.compose.service: frontend
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: slms
+            com.docker.compose.service: frontend
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: slms
+                com.docker.compose.service: frontend
+                com.docker.compose.network.slms-net: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: slms-frontend
+                  image: slms-frontend
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                    - name: frontend-80
+                      containerPort: 80

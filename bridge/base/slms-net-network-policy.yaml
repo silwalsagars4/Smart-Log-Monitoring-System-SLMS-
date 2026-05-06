@@ -1,0 +1,18 @@
+#! slms-net-network-policy.yaml
+# Generated code, do not edit
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: slms-net-network-policy
+    namespace: slms
+spec:
+    podSelector:
+        matchLabels:
+            com.docker.compose.network.slms-net: "true"
+    policyTypes:
+        - Ingress
+    ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                    com.docker.compose.network.slms-net: "true"

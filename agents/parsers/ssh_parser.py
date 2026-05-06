@@ -1,6 +1,10 @@
 """
 SSH / auth.log parser.
 
+Source tagging:
+  - sshd daemon events  → source = "ssh"
+  - sudo / PAM events   → source = "auth"   (fix: was incorrectly "ssh")
+
 Example lines:
   Apr 15 10:22:01 host sshd[12345]: Failed password for root from 192.168.1.1 port 22 ssh2
   Apr 15 10:22:05 host sshd[12345]: Accepted publickey for admin from 10.0.0.5 port 54321 ssh2
@@ -63,7 +67,7 @@ class SSHParser(BaseParser):
         if m2:
             return {
                 "timestamp": _build_ts(m2.group("month"), m2.group("day"), m2.group("time")),
-                "source": "ssh",
+                "source": "auth",   # BUG FIX: sudo comes from auth.log, not an SSH session
                 "event_type": "sudo",
                 "user": m2.group("sudo_user") or "",
                 "ip": "",

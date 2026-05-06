@@ -19,6 +19,20 @@ export default function Logs() {
   const pageSize = 50
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
+  const normalizeLog = (raw) => {
+    if (!raw || typeof raw !== 'object') return null
+    return {
+      _id: raw._id || raw.id || Math.random().toString(36),
+      timestamp: raw.timestamp || raw.t || new Date().toISOString(),
+      severity: raw.severity || 'information',
+      source: raw.source || 'unknown',
+      message: typeof raw.message === 'string' ? raw.message : JSON.stringify(raw.message || raw.msg || raw),
+      ip: raw.ip || '',
+      is_anomaly: !!raw.is_anomaly,
+      anomaly_score: raw.anomaly_score || 0
+    }
+  }
+
   const fetchLogs = useCallback(async () => {
     setLoading(true)
     try {
@@ -28,8 +42,11 @@ export default function Logs() {
       if (filters.search) params.search = filters.search
       if (filters.is_anomaly !== '') params.is_anomaly = filters.is_anomaly === 'true'
       const { data } = await getLogs(params)
-      setLogs(data.data)
-      setTotal(data.total)
+      
+      // Normalize logs to ensure safe rendering
+      const safeLogs = (data.data || []).map(normalizeLog).filter(Boolean)
+      setLogs(safeLogs)
+      setTotal(data.total || 0)
     } catch (err) {
       console.error(err)
     } finally {

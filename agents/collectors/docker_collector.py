@@ -18,8 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class DockerCollector:
-    def __init__(self, redis_client: redis.Redis):
+    # UPDATED: Added excluded_containers argument to __init__
+    def __init__(self, redis_client: redis.Redis, excluded_containers: list[str] = None):
         self.redis = redis_client
+        self.excluded_containers = excluded_containers or []
         self._stop_event = threading.Event()
         self._threads: list[threading.Thread] = []
 
@@ -36,10 +38,11 @@ class DockerCollector:
                 raw = log_line.decode("utf-8", errors="replace").strip()
                 if not raw:
                     continue
-                # Docker timestamps: 2024-01-15T12:00:00.000000000Z <message>
+                
                 parts = raw.split(" ", 1)
                 ts = parts[0] if len(parts) > 1 else datetime.now(timezone.utc).isoformat()
                 message = parts[1] if len(parts) > 1 else raw
+                
                 entry = {
                     "timestamp": ts,
                     "source": "docker",
@@ -47,6 +50,7 @@ class DockerCollector:
                     "message": message,
                     "raw": raw,
                 }
+                
                 self.redis.xadd(
                     REDIS_STREAM,
                     {k: str(v) for k, v in entry.items()},
@@ -69,6 +73,10 @@ class DockerCollector:
             try:
                 containers = client.containers.list()
                 for c in containers:
+                    # UPDATED: Skip the container if its name is in the excluded list
+                    if c.name in self.excluded_containers:
+                        continue
+                        
                     if c.id not in known:
                         known.add(c.id)
                         t = threading.Thread(target=self._tail_container, args=(c,), daemon=True)

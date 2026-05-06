@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext'
 const SEVERITY_FILTER = ['', 'high', 'disaster']
 
 export default function Alerts() {
-  const { isAdmin } = useAuth()
+  const { user } = useAuth()
   const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(false)
   const [severity, setSeverity] = useState('')
@@ -79,7 +79,7 @@ export default function Alerts() {
 
         {/* Alerts */}
         <div className="card">
-          <AlertPanel alerts={alerts} onRefresh={fetchAlerts} isAdmin={isAdmin} />
+          <AlertPanel alerts={alerts} onRefresh={fetchAlerts} userRole={user?.role || "user"} />
         </div>
       </div>
     </Layout>

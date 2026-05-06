@@ -19,24 +19,24 @@ function Row({ log, expanded, onToggle }) {
         onClick={onToggle}
       >
         <td className="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">
-          {log.timestamp?.substring(0, 19).replace('T', ' ') || '—'}
+          {typeof log.timestamp === 'string' ? log.timestamp.substring(0, 19).replace('T', ' ') : '—'}
         </td>
         <td className="px-4 py-3">
           <span className={`text-xs font-semibold uppercase ${SOURCE_COLORS[log.source] || 'text-slate-400'}`}>
-            {log.source}
+            {String(log.source || '')}
           </span>
         </td>
         <td className="px-4 py-3">
           <SeverityBadge severity={log.severity} />
         </td>
         <td className="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">
-          {log.ip || '—'}
+          {String(log.ip || '—')}
         </td>
         <td className="px-4 py-3 text-sm text-slate-300 max-w-xs truncate">
-          {log.message || log.raw || '—'}
+          {typeof log.message === 'string' ? log.message : (log.raw ? String(log.raw) : '—')}
         </td>
         <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
-          {log.anomaly_score ? log.anomaly_score.toFixed(3) : '—'}
+          {typeof log.anomaly_score === 'number' ? log.anomaly_score.toFixed(3) : '—'}
         </td>
         <td className="px-4 py-3 text-right">
           {expanded ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}

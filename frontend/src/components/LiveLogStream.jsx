@@ -1,9 +1,42 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useWebSocket } from '../contexts/WebSocketContext'
 import SeverityBadge from './SeverityBadge'
 import { Terminal, Trash2, PauseCircle, PlayCircle } from 'lucide-react'
 
 const MAX_LOG_LINES = 200
+
+// ─── Normalizer ──────────────────────────────────────────────────────────────
+// Handles two shapes:
+//   1. Already-processed: { message, source, ip, severity, timestamp }
+//   2. Raw MongoDB:       { t, s, c, id, ctx, msg, attr }
+// Returns a safe flat object — never passes a raw object to JSX
+function normalizeLog(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+
+  // Already normalized shape — use as-is
+  if (typeof raw.message === 'string' || typeof raw.source === 'string') {
+    return {
+      timestamp: typeof raw.timestamp === 'string' ? raw.timestamp : '',
+      severity:  typeof raw.severity  === 'string' ? raw.severity  : 'info',
+      source:    typeof raw.source    === 'string' ? raw.source    : '',
+      message:   typeof raw.message   === 'string' ? raw.message   : '',
+      ip:        typeof raw.ip        === 'string' ? raw.ip        : '',
+      raw:       typeof raw.raw       === 'string' ? raw.raw       : '',
+    }
+  }
+
+  // Raw MongoDB log shape: { t, s, c, id, ctx, msg, attr }
+  const ts = raw.t?.['$date'] ?? raw.t ?? ''
+  const severityMap = { E: 'error', W: 'warning', I: 'info', D: 'debug', F: 'fatal' }
+  const severity = severityMap[raw.s] ?? 'info'
+  const source   = [raw.c, raw.ctx].filter(Boolean).join('/') || ''
+  const message  = typeof raw.msg === 'string' ? raw.msg : ''
+  const ip       = raw.attr?.remote ?? raw.attr?.client ?? ''
+
+  return { timestamp: ts, severity, source, message, ip, raw: '' }
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function LiveLogStream() {
   const { subscribe } = useWebSocket()
@@ -16,12 +49,14 @@ export default function LiveLogStream() {
   useEffect(() => { pausedRef.current = paused }, [paused])
 
   useEffect(() => {
-    const unsub = subscribe((log) => {
+    const unsub = subscribe((rawLog) => {
       if (pausedRef.current) return
-      setLogs((prev) => {
-        const next = [log, ...prev]
-        return next.slice(0, MAX_LOG_LINES)
-      })
+
+      // Normalize before touching state — kills error #31 at the source
+      const log = normalizeLog(rawLog)
+      if (!log) return
+
+      setLogs((prev) => [log, ...prev].slice(0, MAX_LOG_LINES))
     })
     return unsub
   }, [subscribe])

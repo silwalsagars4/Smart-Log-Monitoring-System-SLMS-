@@ -1,0 +1,53 @@
+#! mongo-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: mongo
+    namespace: slms
+    labels:
+        com.docker.compose.project: slms
+        com.docker.compose.service: mongo
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: slms
+            com.docker.compose.service: mongo
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: slms
+                com.docker.compose.service: mongo
+                com.docker.compose.network.slms-net: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: slms-mongo
+                  image: mongo:7
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: MONGO_INITDB_DATABASE
+                      value: "slms"
+                    - name: MONGO_INITDB_ROOT_PASSWORD
+                      value: "slmspassword"
+                    - name: MONGO_INITDB_ROOT_USERNAME
+                      value: "slms"
+                  livenessProbe:
+                    exec:
+                        command: [mongosh --eval db.adminCommand('ping')]
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                    failureThreshold: 5
+                  ports:
+                    - name: mongo-27017
+                      containerPort: 27017
+                  volumeMounts:
+                    - name: data-db
+                      mountPath: /data/db
+            volumes:
+                - name: data-db
+                  persistentVolumeClaim:
+                    claimName: mongo-mongo-data

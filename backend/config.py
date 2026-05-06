@@ -47,6 +47,15 @@ class Settings(BaseSettings):
     ML_CONTAMINATION: float = 0.05
     ML_RETRAIN_INTERVAL_HOURS: int = 6
     ML_MODEL_PATH: str = "/app/models/isolation_forest.pkl"
+    ML_MODEL_DIR: str = "/app/models"
+    ML_LOF_NEIGHBORS: int = 30
+    ML_SVM_SOURCES: str = "ssh,mysql,auth"
+    ML_ENSEMBLE_WEIGHTS: str = "0.55,0.30,0.15"
+    ML_DRIFT_K: float = 0.5
+    ML_DRIFT_H: float = 5.0
+    ML_ADAPTIVE_THRESHOLD_WINDOW: int = 1000
+    ML_SOURCE_MODEL_MIN_SAMPLES: int = 500
+    ML_MAX_BUFFER_SIZE: int = 15000
 
 
 @lru_cache

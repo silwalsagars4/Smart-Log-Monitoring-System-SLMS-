@@ -39,13 +39,17 @@ class BaseCollector(ABC):
         try:
             structured = self.parser.parse(raw_line)
             if structured is None:
-                # Fallback: publish unparsed
+                # Priority: regex fallback → collector metadata
+                from parsers.source_detector import detect_source
+                detected = detect_source(raw_line)
                 structured = {
                     "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "source": self.get_source(),
+                    "source": detected if detected != "unknown" else self.get_source(),
                     "raw": raw_line,
                     "message": raw_line,
+                    "event_type": "unparsed",
                 }
+            # Collector source is the authoritative final stamp only if parser didn't set one
             structured.setdefault("source", self.get_source())
             structured.setdefault("raw", raw_line)
             self.redis.xadd(

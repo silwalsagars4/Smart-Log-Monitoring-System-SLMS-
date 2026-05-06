@@ -14,6 +14,7 @@ class UserRegister(BaseModel):
     username: str = Field(..., min_length=3, max_length=64)
     email: str
     password: str = Field(..., min_length=8)
+    role: Optional[str] = "user"
 
 
 class UserLogin(BaseModel):
@@ -53,6 +54,8 @@ class LogEntry(BaseModel):
     severity: Optional[str] = "information"
     anomaly_score: Optional[float] = 0.0
     is_anomaly: Optional[bool] = False
+    human_insight: Optional[str] = ""
+    ml_detail: Optional[dict] = None
     geo: Optional[dict] = None
     container: Optional[str] = ""
 
@@ -94,6 +97,23 @@ class AlertOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AlertInteractionOut(BaseModel):
+    id: int
+    alert_id: int
+    username: str
+    user_role: str
+    action: str
+    message: str
+    timestamp: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class CommentCreate(BaseModel):
+    message: str = Field(..., min_length=1, max_length=2000)
 
 
 # ── Stats ─────────────────────────────────────────────────────────────────────

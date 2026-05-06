@@ -1,0 +1,25 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - 0-slms-namespace.yaml
+    - agents-deployment.yaml
+    - backend-deployment.yaml
+    - backend-expose.yaml
+    - backend-geoip-data-persistentVolumeClaim.yaml
+    - backend-ml-models-persistentVolumeClaim.yaml
+    - backend-service.yaml
+    - frontend-deployment.yaml
+    - frontend-expose.yaml
+    - frontend-service.yaml
+    - mongo-deployment.yaml
+    - mongo-expose.yaml
+    - mongo-mongo-data-persistentVolumeClaim.yaml
+    - postgres-deployment.yaml
+    - postgres-expose.yaml
+    - postgres-postgres-data-persistentVolumeClaim.yaml
+    - redis-deployment.yaml
+    - redis-expose.yaml
+    - redis-redis-data-persistentVolumeClaim.yaml
+    - slms-net-network-policy.yaml

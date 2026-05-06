@@ -1,0 +1,100 @@
+#! agents-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: agents
+    namespace: slms
+    labels:
+        com.docker.compose.project: slms
+        com.docker.compose.service: agents
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: slms
+            com.docker.compose.service: agents
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: slms
+                com.docker.compose.service: agents
+                com.docker.compose.network.slms-net: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: slms-agents
+                  image: slms-agents
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: ALERT_FROM
+                      value: "slms@example.com"
+                    - name: ALERT_TO
+                      value: "admin@example.com"
+                    - name: BACKEND_URL
+                      value: "http://backend:8000"
+                    - name: ENABLE_EMAIL
+                      value: "false"
+                    - name: ENABLE_GEOIP
+                      value: "false"
+                    - name: ENABLE_TELEGRAM
+                      value: "false"
+                    - name: JWT_ALGORITHM
+                      value: "HS256"
+                    - name: JWT_EXPIRE_MINUTES
+                      value: "60"
+                    - name: JWT_SECRET
+                      value: "dev-secret-change-in-production-use-64-chars-minimum"
+                    - name: MAXMIND_LICENSE_KEY
+                      value: ""
+                    - name: ML_CONTAMINATION
+                      value: "0.05"
+                    - name: ML_RETRAIN_INTERVAL_HOURS
+                      value: "6"
+                    - name: MONGO_PASSWORD
+                      value: "slmspassword"
+                    - name: MONGO_USER
+                      value: "slms"
+                    - name: POSTGRES_PASSWORD
+                      value: "slmspassword"
+                    - name: POSTGRES_USER
+                      value: "slms"
+                    - name: REDIS_URL
+                      value: "redis://redis:6379"
+                    - name: SMTP_HOST
+                      value: "smtp.gmail.com"
+                    - name: SMTP_PASSWORD
+                      value: ""
+                    - name: SMTP_PORT
+                      value: "587"
+                    - name: SMTP_USER
+                      value: ""
+                    - name: TELEGRAM_BOT_TOKEN
+                      value: ""
+                    - name: TELEGRAM_CHAT_ID
+                      value: ""
+                  volumeMounts:
+                    - name: host-var-log
+                      mountPath: /host/var/log
+                      readOnly: true
+                    - name: host-docker-containers
+                      mountPath: /host/docker/containers
+                      readOnly: true
+                    - name: var-run-docker-sock
+                      mountPath: /var/run/docker.sock
+                      readOnly: true
+            volumes:
+                - name: host-var-log
+                  hostPath:
+                    path: /var/log
+                  readOnly: true
+                - name: host-docker-containers
+                  hostPath:
+                    path: /var/lib/docker/containers
+                  readOnly: true
+                - name: var-run-docker-sock
+                  hostPath:
+                    path: /var/run/docker.sock
+                  readOnly: true
