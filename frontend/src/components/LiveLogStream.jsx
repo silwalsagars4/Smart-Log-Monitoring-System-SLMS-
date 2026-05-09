@@ -125,7 +125,7 @@ export default function LiveLogStream() {
               </span>
               <SeverityBadge severity={log.severity} showDot={false} className="flex-shrink-0 py-0 text-[10px]" />
               <span className="text-slate-400 flex-shrink-0 w-16 truncate">[{log.source}]</span>
-              <span className="text-slate-300 truncate">{log.message || log.raw || '—'}</span>
+              <span className="text-slate-300 break-words">{log.message || log.raw || '—'}</span>
               {log.ip && <span className="text-slate-600 flex-shrink-0 ml-auto">{log.ip}</span>}
             </div>
           ))

@@ -15,7 +15,7 @@ from config import get_settings
 from database.mongo import close_mongo, get_db
 from database.postgres import create_tables
 from middleware.rate_limiter import limiter
-from routes import auth, logs, alerts, stats, ws, config
+from routes import auth, logs, alerts, stats, ws, config, system
 from services.pipeline_consumer import PipelineConsumer
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -115,6 +115,7 @@ app.include_router(logs.router, prefix="/api")
 app.include_router(alerts.router, prefix="/api")
 app.include_router(stats.router, prefix="/api")
 app.include_router(config.router, prefix="/api")
+app.include_router(system.router, prefix="/api")
 app.include_router(ws.router)
 
 

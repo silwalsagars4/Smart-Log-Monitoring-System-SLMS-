@@ -20,6 +20,7 @@ from collectors.apache_collector import ApacheCollector
 from collectors.docker_collector import DockerCollector
 from collectors.mysql_collector import MySQLCollector
 from collectors.generic_collector import GenericCollector
+from collectors.system_collector import SystemCollector
 
 load_dotenv()
 
@@ -149,11 +150,17 @@ def main():
         threads.append((t, col))
         logger.info("Started static collector: %s", col.get_source())
 
+    # ── System telemetry collector ─────────────────────────────────────────
+    sys_collector = SystemCollector(r)
+    sys_collector.start()
+    logger.info("Started SystemCollector — publishing to slms:system_stats")
+
     watcher = ConfigWatcher(r)
     watcher.start()
 
     def _shutdown(sig, frame):
         logger.info("Shutdown signal received. Stopping collectors…")
+        sys_collector.stop()
         watcher.stop()
         for _, col in threads:
             col.stop()

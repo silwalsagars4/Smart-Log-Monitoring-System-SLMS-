@@ -22,11 +22,13 @@ REDIS_STREAM = "slms:logs"
 
 # Configuration Data
 FAKE_IPS = ["192.168.1.100", "10.0.0.5", "172.16.0.22", "45.33.32.156", "1.2.3.4", "5.6.7.8"]
-USERNAMES = ["root", "admin", "ubuntu", "user1"]
+USERNAMES = ["root", "admin", "ubuntu", "sagar"]
 NGINX_PATHS = ["/", "/api/v1/health", "/api/v1/logs", "/dashboard", "/login"]
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    # Kathmandu is UTC +5:45
+    tz_kathmandu = timezone(timedelta(hours=5, minutes=45))
+    return datetime.now(tz_kathmandu).isoformat()
 
 # --- LOG GENERATORS ---
 

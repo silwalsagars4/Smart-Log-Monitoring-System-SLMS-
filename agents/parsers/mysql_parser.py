@@ -7,7 +7,7 @@ Example:
 """
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from parsers.base_parser import BaseParser
@@ -39,8 +39,10 @@ class MySQLParser(BaseParser):
             }
         m2 = _LEGACY_RE.match(raw)
         if m2:
+            # Kathmandu is UTC +5:45
+            tz_kathmandu = timezone(timedelta(hours=5, minutes=45))
             return {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(tz_kathmandu).isoformat(),
                 "source": "mysql",
                 "event_type": "db_log",
                 "message": m2.group("message").strip(),

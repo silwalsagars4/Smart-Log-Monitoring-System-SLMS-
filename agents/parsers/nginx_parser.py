@@ -7,7 +7,7 @@ Example:
 """
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from parsers.base_parser import BaseParser
@@ -29,7 +29,9 @@ class NginxParser(BaseParser):
         try:
             ts = datetime.strptime(m.group("time"), _TIME_FMT).isoformat()
         except ValueError:
-            ts = datetime.now(timezone.utc).isoformat()
+            # Kathmandu is UTC +5:45
+            tz_kathmandu = timezone(timedelta(hours=5, minutes=45))
+            ts = datetime.now(tz_kathmandu).isoformat()
 
         status = int(m.group("status"))
         return {

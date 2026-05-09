@@ -32,7 +32,7 @@ function Row({ log, expanded, onToggle }) {
         <td className="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">
           {String(log.ip || '—')}
         </td>
-        <td className="px-4 py-3 text-sm text-slate-300 max-w-xs truncate">
+        <td className="px-4 py-3 text-sm text-slate-300 break-words min-w-[20rem]">
           {typeof log.message === 'string' ? log.message : (log.raw ? String(log.raw) : '—')}
         </td>
         <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">

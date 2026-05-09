@@ -38,7 +38,8 @@ export default function Alerts() {
 
   return (
     <Layout onRefresh={fetchAlerts}>
-      <div className="max-w-4xl space-y-4">
+      <div className="p-6 space-y-4">
+        <div className="max-w-4xl space-y-4">
         {/* Header + filters */}
         <div className="card py-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -81,6 +82,7 @@ export default function Alerts() {
         <div className="card">
           <AlertPanel alerts={alerts} onRefresh={fetchAlerts} userRole={user?.role || "user"} />
         </div>
+      </div>
       </div>
     </Layout>
   )

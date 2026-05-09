@@ -44,7 +44,8 @@ export default function Settings() {
 
   return (
     <Layout>
-      <div className="max-w-4xl space-y-6">
+      <div className="p-6">
+        <div className="max-w-4xl space-y-6">
         
         {/* Settings Header with Glassmorphism */}
         <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-brand-600/20 to-purple-600/20 border border-brand-500/20 p-6 backdrop-blur-sm">
@@ -135,6 +136,7 @@ export default function Settings() {
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
     </Layout>

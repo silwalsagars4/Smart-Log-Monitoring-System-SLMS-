@@ -54,6 +54,8 @@ password: admin1234
 ### 4. Run the log simulator (generate synthetic events)
 ```bash
 docker exec slms-agents python log_simulator.py --rate 10 --duration 300
+docker exec slms-agents python log_simulator.py --mode train --duration 30 --rate 20
+docker exec slms-agents python log_simulator.py --mode attack --duration 30 --rate 5
 ```
 
 ---

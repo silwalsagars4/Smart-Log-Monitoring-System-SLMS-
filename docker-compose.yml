@@ -20,6 +20,8 @@ services:
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis-data:/data
+    ports:
+      - "6379:6379"
     networks:
       - slms-net
     healthcheck:
@@ -103,13 +105,22 @@ services:
     environment:
       REDIS_URL: redis://redis:6379
       BACKEND_URL: http://backend:8000
+      HOST_OS_RELEASE: /host/etc/os-release
+      PROCFS_PATH: /host/proc
+      SYSFS_PATH: /host/sys
     volumes:
       - /var/log:/host/var/log:ro
       - /var/lib/docker/containers:/host/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # ── System telemetry mounts (read-only) ──────────────────────────────
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /etc/hostname:/host/etc/hostname:ro
     depends_on:
       redis:
         condition: service_healthy
+    pid: host
     networks:
       - slms-net
 

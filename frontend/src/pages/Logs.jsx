@@ -66,7 +66,8 @@ export default function Logs() {
 
   return (
     <Layout onRefresh={fetchLogs}>
-      <div className="space-y-4 max-w-screen-2xl">
+      <div className="p-6 space-y-4">
+        <div className="space-y-4 max-w-screen-2xl">
         {/* Filter bar */}
         <div className="card py-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -149,6 +150,7 @@ export default function Logs() {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </Layout>
   )
