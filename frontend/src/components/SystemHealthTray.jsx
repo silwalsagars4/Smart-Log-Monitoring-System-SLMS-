@@ -8,10 +8,11 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { getSystemStats } from '../api/system'
+import { getSummary } from '../api/stats'
 import {
   Cpu, HardDrive, MemoryStick, Server, RefreshCw,
   CircleDot, Wifi, WifiOff, Clock, Activity, ArrowUpRight, ArrowDownLeft,
-  Zap, Database, ShieldAlert, Layers
+  Zap, Database, ShieldAlert, Layers, Shield, AlertCircle, ScrollText
 } from 'lucide-react'
 
 // ── ProgressBar ───────────────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ function ProgressBar({ percent = 0, label, icon: Icon, colorClass = 'text-brand-
 // ── Stat Group ────────────────────────────────────────────────────────────────
 function StatGroup({ label, children }) {
   return (
-    <div className="py-2 border-b border-surface-700/50 last:border-0">
+    <div className="p-4 xl:p-0 xl:py-2 xl:border-b border-surface-700/50 last:border-0 bg-surface-800/30 xl:bg-transparent rounded-xl xl:rounded-none border border-surface-700/30 xl:border-0 xl:border-b">
       <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">{label}</p>
       <div className="space-y-3">
         {children}
@@ -55,14 +56,19 @@ function StatGroup({ label, children }) {
 
 export default function SystemHealthTray() {
   const [stats, setStats] = useState(null)
+  const [summary, setSummary] = useState(null)
   const [error, setError] = useState(null)
   const [spinning, setSpinning] = useState(false)
   const intervalRef = useRef(null)
 
   const fetchStats = useCallback(async () => {
     try {
-      const { data } = await getSystemStats()
-      setStats(data)
+      const [statsRes, summaryRes] = await Promise.all([
+        getSystemStats(),
+        getSummary()
+      ])
+      setStats(statsRes.data)
+      setSummary(summaryRes.data)
       setError(null)
     } catch (err) {
       if (err?.response?.status === 503) setError('Initializing Telemetry...')
@@ -85,7 +91,7 @@ export default function SystemHealthTray() {
 
   if (!stats && !error) {
     return (
-      <div className="w-80 h-full bg-surface-900/50 border-l border-surface-700/30 flex flex-col items-center justify-center gap-4">
+      <div className="w-full xl:w-80 xl:h-full bg-surface-900/50 xl:border-l border-surface-700/30 flex flex-col items-center justify-center py-8 xl:py-0 gap-4">
         <RefreshCw size={24} className="text-brand-500 animate-spin" />
         <span className="text-xs text-slate-500 font-mono">Syncing Core...</span>
       </div>
@@ -94,7 +100,7 @@ export default function SystemHealthTray() {
 
   if (error && !stats) {
     return (
-      <div className="w-80 h-full bg-surface-900/80 border-l border-red-500/20 p-6 flex flex-col items-center justify-center text-center gap-4">
+      <div className="w-full xl:w-80 xl:h-full bg-surface-900/80 xl:border-l border-red-500/20 p-6 flex flex-col items-center justify-center text-center gap-4">
         <div className="p-4 rounded-full bg-red-500/10 border border-red-500/20">
           <WifiOff size={32} className="text-red-400" />
         </div>
@@ -104,7 +110,7 @@ export default function SystemHealthTray() {
         </div>
         <button 
           onClick={fetchStats}
-          className="btn-primary w-full py-2 text-xs"
+          className="btn-primary w-full max-w-xs py-2 text-xs"
         >
           Re-establish Link
         </button>
@@ -114,8 +120,21 @@ export default function SystemHealthTray() {
 
   const services = Object.entries(stats.services || {})
 
+  const getSecurityPosture = () => {
+    if (!summary) return { label: 'Unknown', color: 'text-slate-400', bg: 'bg-slate-500/10' }
+    const criticals = (summary.severity_counts?.disaster || 0) + (summary.severity_counts?.critical || 0)
+    const highs = summary.severity_counts?.high || 0
+    const mediums = (summary.severity_counts?.medium || 0) + (summary.severity_counts?.warning || 0)
+
+    if (criticals > 0 || highs > 10) return { label: 'Critical', color: 'text-red-400', bg: 'bg-red-500/10', iconColor: 'text-red-500' }
+    if (highs > 0 || mediums > 20) return { label: 'Vulnerable', color: 'text-yellow-400', bg: 'bg-yellow-500/10', iconColor: 'text-yellow-500' }
+    return { label: 'Operational', color: 'text-emerald-400', bg: 'bg-emerald-500/10', iconColor: 'text-emerald-500' }
+  }
+
+  const posture = getSecurityPosture()
+
   return (
-    <div className="w-80 h-full bg-surface-900/60 border-l border-surface-700/50 flex flex-col backdrop-blur-xl shadow-2xl">
+    <div className="w-full xl:w-80 xl:h-full bg-surface-900/40 xl:bg-surface-900/60 xl:border-l border-surface-700/50 flex flex-col backdrop-blur-xl">
       
       {/* ── Header ── */}
       <div className="p-4 bg-gradient-to-br from-brand-600/10 to-transparent border-b border-surface-700/50">
@@ -132,14 +151,19 @@ export default function SystemHealthTray() {
           </button>
         </div>
         <div className="flex items-center gap-2 mt-2">
-           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+           <div className={`w-1.5 h-1.5 rounded-full ${posture.iconColor === 'text-emerald-500' ? 'bg-emerald-500 animate-pulse' : posture.iconColor === 'text-yellow-500' ? 'bg-yellow-500' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`} />
            <span className="text-[9px] font-bold text-slate-300 truncate max-w-[200px]">{stats.hostname}</span>
         </div>
-        <p className="text-[9px] text-slate-500 mt-0.5 font-mono">{stats.os_name}</p>
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-[9px] text-slate-500 font-mono">{stats.os_name}</p>
+          <div className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${posture.bg} ${posture.color} border border-white/5`}>
+            {posture.label}
+          </div>
+        </div>
       </div>
 
       {/* ── Body ── */}
-      <div className="flex-1 p-4 space-y-1">
+      <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-1 gap-4 xl:gap-0 xl:space-y-1">
         
         {/* Core Utilization */}
         <StatGroup label="Utilization">
@@ -204,6 +228,48 @@ export default function SystemHealthTray() {
               <div className="flex items-center gap-1 text-blue-400 font-mono text-[10px] font-bold">
                 <ArrowUpRight size={8} /> {stats.net_sent_mb} MB
               </div>
+            </div>
+          </div>
+        </StatGroup>
+
+        {/* Log Health */}
+        <StatGroup label="Log Health">
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ScrollText size={12} className="text-slate-400" />
+                <span className="text-[10px] text-slate-300">Total Logs</span>
+              </div>
+              <span className="text-[11px] font-mono font-bold text-white">{summary?.total_logs?.toLocaleString() || '—'}</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2 rounded-lg bg-red-500/5 border border-red-500/10">
+                <p className="text-[8px] font-bold text-red-400/60 uppercase tracking-tighter mb-1">Critical</p>
+                <div className="flex items-center justify-between">
+                   <ShieldAlert size={10} className="text-red-500" />
+                   <span className="text-[11px] font-black text-red-400">
+                    {(summary?.severity_counts?.disaster || 0) + (summary?.severity_counts?.critical || 0)}
+                   </span>
+                </div>
+              </div>
+              <div className="p-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
+                <p className="text-[8px] font-bold text-orange-400/60 uppercase tracking-tighter mb-1">High</p>
+                <div className="flex items-center justify-between">
+                   <AlertCircle size={10} className="text-orange-500" />
+                   <span className="text-[11px] font-black text-orange-400">
+                    {summary?.severity_counts?.high || 0}
+                   </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-2 rounded-lg bg-surface-800/40 border border-surface-700/50 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Shield size={10} className={posture.color} />
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Posture</span>
+              </div>
+              <span className={`text-[10px] font-black ${posture.color}`}>{posture.label}</span>
             </div>
           </div>
         </StatGroup>
