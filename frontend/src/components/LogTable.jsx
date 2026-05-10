@@ -60,7 +60,7 @@ function Row({ log, expanded, onToggle }) {
               ].filter(([, v]) => v != null && v !== '').map(([label, value]) => (
                 <div key={label}>
                   <p className="text-slate-500 mb-0.5">{label}</p>
-                  <p className="text-slate-300 font-mono truncate">{String(value)}</p>
+                  <p className="text-slate-300 font-mono break-all">{String(value)}</p>
                 </div>
               ))}
             </div>

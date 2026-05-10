@@ -2,7 +2,7 @@
 System Health API — serves hardware & OS telemetry collected by the agent.
 
 Route:  GET /api/v1/system/stats
-Auth:   JWT — admin or analyst role required
+Auth:   JWT — any authenticated user
 Data:   Read from Redis key  slms:system_stats  (set by SystemCollector)
 """
 
@@ -13,7 +13,7 @@ import redis as redis_lib
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from config import get_settings
-from middleware.auth_middleware import require_analyst_or_above
+from middleware.auth_middleware import get_current_user
 from models.db_models import User
 
 logger   = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def _get_redis() -> redis_lib.Redis:
 
 @router.get("/stats")
 async def get_system_stats(
-    current_user: User = Depends(require_analyst_or_above),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Return the latest system telemetry snapshot published by the agent.

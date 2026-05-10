@@ -89,7 +89,7 @@ export default function AlertPanel({ alerts = [], onRefresh, userRole = "user" }
                   </span>
                 )}
               </div>
-              <p className="text-sm text-slate-300 truncate">{alert.message}</p>
+              <p className="text-sm text-slate-300 break-words leading-relaxed">{alert.message}</p>
               <p className="text-xs text-slate-600 mt-1">
                 {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })} ·{' '}
                 Score: <span className="text-slate-500">{alert.anomaly_score?.toFixed(3)}</span>

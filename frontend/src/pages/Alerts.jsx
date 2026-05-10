@@ -38,51 +38,51 @@ export default function Alerts() {
 
   return (
     <Layout onRefresh={fetchAlerts}>
-      <div className="p-6 space-y-4">
-        <div className="max-w-4xl space-y-4">
-        {/* Header + filters */}
-        <div className="card py-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-white font-medium">
-              <Bell size={16} className="text-red-400" />
-              Alert Center
+      <div className="p-6 space-y-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header + filters */}
+          <div className="card py-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-white font-medium">
+                <Bell size={16} className="text-red-400" />
+                Alert Center
+              </div>
+
+              <select
+                value={severity}
+                onChange={(e) => { setSeverity(e.target.value); setPage(1) }}
+                className="input w-36 ml-auto"
+              >
+                <option value="">All severities</option>
+                <option value="high">High</option>
+                <option value="disaster">Disaster</option>
+              </select>
+
+              <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showAcknowledged}
+                  onChange={(e) => setShowAcknowledged(e.target.checked)}
+                  className="rounded border-surface-500 bg-surface-700 text-brand-600 focus:ring-brand-500"
+                />
+                Show acknowledged
+              </label>
             </div>
+          </div>
 
-            <select
-              value={severity}
-              onChange={(e) => { setSeverity(e.target.value); setPage(1) }}
-              className="input w-36 ml-auto"
-            >
-              <option value="">All severities</option>
-              <option value="high">High</option>
-              <option value="disaster">Disaster</option>
-            </select>
+          {/* Alert count */}
+          <div className="flex items-center gap-2">
+            <span className="badge bg-red-500/15 text-red-400 border border-red-500/30">
+              {alerts.length} alerts
+            </span>
+            {loading && <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />}
+          </div>
 
-            <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showAcknowledged}
-                onChange={(e) => setShowAcknowledged(e.target.checked)}
-                className="rounded border-surface-500 bg-surface-700 text-brand-600 focus:ring-brand-500"
-              />
-              Show acknowledged
-            </label>
+          {/* Alerts */}
+          <div className="card">
+            <AlertPanel alerts={alerts} onRefresh={fetchAlerts} userRole={user?.role || "user"} />
           </div>
         </div>
-
-        {/* Alert count */}
-        <div className="flex items-center gap-2">
-          <span className="badge bg-red-500/15 text-red-400 border border-red-500/30">
-            {alerts.length} alerts
-          </span>
-          {loading && <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />}
-        </div>
-
-        {/* Alerts */}
-        <div className="card">
-          <AlertPanel alerts={alerts} onRefresh={fetchAlerts} userRole={user?.role || "user"} />
-        </div>
-      </div>
       </div>
     </Layout>
   )

@@ -122,6 +122,8 @@ class SummaryStats(BaseModel):
     total_logs: int
     total_anomalies: int
     total_alerts: int
+    unacknowledged_alerts: int
+    recent_anomalies: int
     severity_counts: dict[str, int]
     source_counts: dict[str, int]
     logs_per_minute: float

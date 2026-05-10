@@ -14,6 +14,7 @@ import {
   CircleDot, Wifi, WifiOff, Clock, Activity, ArrowUpRight, ArrowDownLeft,
   Zap, Database, ShieldAlert, Layers, Shield, AlertCircle, ScrollText
 } from 'lucide-react'
+import ServiceSentinel from './ServiceSentinel'
 
 // ── ProgressBar ───────────────────────────────────────────────────────────────
 function ProgressBar({ percent = 0, label, icon: Icon, colorClass = 'text-brand-400', subLabel = '' }) {
@@ -122,19 +123,35 @@ export default function SystemHealthTray() {
 
   const getSecurityPosture = () => {
     if (!summary) return { label: 'Unknown', color: 'text-slate-400', bg: 'bg-slate-500/10' }
+    
+    // POSTURE LOGIC v2: Dynamic & Responsive
+    // 1. Prioritize unacknowledged active threats (alerts)
+    // 2. Consider recent anomalies (last 24h)
+    // 3. Lifetime severity is a fallback/secondary factor
+    
+    const unack = summary.unacknowledged_alerts || 0
+    const recentAnomalies = summary.recent_anomalies || 0
     const criticals = (summary.severity_counts?.disaster || 0) + (summary.severity_counts?.critical || 0)
-    const highs = summary.severity_counts?.high || 0
-    const mediums = (summary.severity_counts?.medium || 0) + (summary.severity_counts?.warning || 0)
 
-    if (criticals > 0 || highs > 10) return { label: 'Critical', color: 'text-red-400', bg: 'bg-red-500/10', iconColor: 'text-red-500' }
-    if (highs > 0 || mediums > 20) return { label: 'Vulnerable', color: 'text-yellow-400', bg: 'bg-yellow-500/10', iconColor: 'text-yellow-500' }
+    if (unack > 10 || (unack > 0 && criticals > 50)) {
+      return { label: 'Critical', color: 'text-red-400', bg: 'bg-red-500/10', iconColor: 'text-red-500' }
+    }
+    
+    if (unack > 0 || recentAnomalies > 10) {
+      return { label: 'High Risk', color: 'text-orange-400', bg: 'bg-orange-500/10', iconColor: 'text-orange-500' }
+    }
+
+    if (recentAnomalies > 0) {
+      return { label: 'Vulnerable', color: 'text-yellow-400', bg: 'bg-yellow-500/10', iconColor: 'text-yellow-500' }
+    }
+    
     return { label: 'Operational', color: 'text-emerald-400', bg: 'bg-emerald-500/10', iconColor: 'text-emerald-500' }
   }
 
   const posture = getSecurityPosture()
 
   return (
-    <div className="w-full xl:w-80 xl:h-full bg-surface-900/40 xl:bg-surface-900/60 xl:border-l border-surface-700/50 flex flex-col backdrop-blur-xl">
+    <div className="w-full xl:w-80 h-full bg-surface-900/40 xl:bg-surface-900/60 xl:border-l border-surface-700/50 flex flex-col backdrop-blur-xl overflow-hidden">
       
       {/* ── Header ── */}
       <div className="p-4 bg-gradient-to-br from-brand-600/10 to-transparent border-b border-surface-700/50">
@@ -163,7 +180,7 @@ export default function SystemHealthTray() {
       </div>
 
       {/* ── Body ── */}
-      <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-1 gap-4 xl:gap-0 xl:space-y-1">
+      <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-1 gap-4 xl:gap-0 xl:space-y-1 overflow-y-auto no-scrollbar">
         
         {/* Core Utilization */}
         <StatGroup label="Utilization">
@@ -275,21 +292,9 @@ export default function SystemHealthTray() {
         </StatGroup>
 
         {/* Service Sentinel */}
-        <StatGroup label="Service Sentinel">
-          <div className="space-y-0.5">
-            {services.map(([name, status]) => (
-              <div key={name} className="flex items-center justify-between py-1 px-2 rounded hover:bg-surface-800/40 transition-colors group">
-                <div className="flex items-center gap-1.5">
-                   <div className={`w-1 h-1 rounded-full ${status === 'Running' ? 'bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.6)]' : 'bg-red-500'}`} />
-                   <span className="text-[10px] font-mono text-slate-300 group-hover:text-white transition-colors">{name}</span>
-                </div>
-                <span className={`text-[8px] font-black px-1 py-0.5 rounded ${status === 'Running' ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10'}`}>
-                  {status === 'Running' ? 'RUN' : 'OFF'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </StatGroup>
+        <div className="p-4 xl:p-0 xl:py-2 xl:border-b border-surface-700/50 last:border-0 bg-surface-800/30 xl:bg-transparent rounded-xl xl:rounded-none border border-surface-700/30 xl:border-0 xl:border-b">
+           <ServiceSentinel services={services} compact={true} />
+        </div>
 
       </div>
 

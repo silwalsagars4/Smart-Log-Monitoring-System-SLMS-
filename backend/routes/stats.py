@@ -40,6 +40,17 @@ async def summary(
     alert_count_result = await db_pg.execute(select(func.count()).select_from(Alert))
     total_alerts = alert_count_result.scalar() or 0
 
+    # Unacknowledged alerts count
+    unack_count_result = await db_pg.execute(select(func.count()).select_from(Alert).where(Alert.acknowledged == False))
+    unacknowledged_alerts = unack_count_result.scalar() or 0
+
+    # Recent anomalies (last 24 hours)
+    one_day_ago = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+    recent_anomalies = await db["logs"].count_documents({
+        "is_anomaly": True,
+        "timestamp": {"$gte": one_day_ago}
+    })
+
     # Logs per minute (last 5 min)
     five_min_ago = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
     recent = await db["logs"].count_documents({"timestamp": {"$gte": five_min_ago}})
@@ -49,6 +60,8 @@ async def summary(
         total_logs=total_logs,
         total_anomalies=total_anomalies,
         total_alerts=total_alerts,
+        unacknowledged_alerts=unacknowledged_alerts,
+        recent_anomalies=recent_anomalies,
         severity_counts=severity_counts,
         source_counts=source_counts,
         logs_per_minute=lpm,

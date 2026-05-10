@@ -46,6 +46,31 @@ _MONGO_MSG_NOISE = re.compile(
 _MONGO_NOISE_SOURCES = frozenset({"NETWORK", "ACCESS", "CONTROL", "STORAGE", "REPL"})
 _HEALTHCHECK_APPS   = frozenset({"mongosh 2.8.2", "mongosh"})
 
+# ── Timestamp Stripper ────────────────────────────────────────────────────────
+_TS_PATTERNS = [
+    # ISO 8601 & Common: 2024-05-10 14:30:00, 2024/05/10 14:30:00, with optional T, Z, or brackets
+    r"\[?\d{4}[-/]\d{2}[-/]\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?\]?",
+    # Nginx/Apache: [10/May/2024:14:30:00 +0000]
+    r"\[?\d{1,2}/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/\d{4}:\d{2}:\d{2}:\d{2}(?:\s[+-]\d{4})?\]?",
+    # Syslog: May 10 14:30:00
+    r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}",
+    # Time only: 14:30:00 or 14:30:00.123
+    r"\b\d{2}:\d{2}:\d{2}(?:\.\d+)?\b",
+    # Date only: 2024-05-10
+    r"\b\d{4}[-/]\d{2}[-/]\d{2}\b",
+]
+_TS_RE = re.compile("|".join(_TS_PATTERNS), re.I)
+
+def _strip_timestamps(msg: str) -> str:
+    if not msg: return msg
+    # Remove the timestamps
+    cleaned = _TS_RE.sub("", msg)
+    # Clean up double spaces and leading/trailing whitespace
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    # Remove leading colons or dashes often left after timestamp
+    cleaned = re.sub(r"^[ :-]+", "", cleaned)
+    return cleaned
+
 
 def _is_noise(log: dict) -> bool:
     """
@@ -147,6 +172,13 @@ class PipelineConsumer:
 
     async def _process(self, entry_id: str, fields: dict):
         log = self._parse_entry(fields)
+
+        # ── TIMESTAMP STRIPPING ───────────────────────────────────────────────
+        # Strip date and time from the message globally.
+        # This cleans the UI (Dashboard, Logs, Alerts) and improves ML accuracy.
+        if "message" in log:
+            log["message"] = _strip_timestamps(str(log["message"]))
+        # ─────────────────────────────────────────────────────────────────────
 
         # ── NOISE GATE ────────────────────────────────────────────────────────
         # Drop MongoDB internal healthcheck logs before ANY processing.

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Layout from '../components/Layout/Layout'
 import { getSummary, getTrend, getTopIPs, getSeverityTrend, getAlerts } from '../api/stats'
+import { getSystemStats } from '../api/system'
 import LogsPerSecondChart from '../components/Charts/LogsPerSecondChart'
 import SeverityDistributionChart from '../components/Charts/SeverityDistributionChart'
 import TopIPsChart from '../components/Charts/TopIPsChart'
@@ -74,6 +75,7 @@ export default function Dashboard() {
   const [topIPs, setTopIPs] = useState([])
   const [severityTrend, setSeverityTrend] = useState([])
   const [alerts, setAlerts] = useState([])
+  const [systemStats, setSystemStats] = useState(null)
 
   const fetchAll = useCallback(async () => {
     try {
@@ -90,6 +92,9 @@ export default function Dashboard() {
       setTopIPs(toArray(ipsRes.data))
       setSeverityTrend(toArray(sevRes.data))
       setAlerts(toArray(alertsRes.data))
+
+      const sysRes = await getSystemStats()
+      setSystemStats(sysRes.data)
 
     } catch (err) {
       console.error('Dashboard fetch error:', err)
@@ -167,8 +172,7 @@ export default function Dashboard() {
           </div>
 
           {/* Recent Alerts */}
-          {alerts.length > 0 && (
-            <div className="card">
+          <div className="card">
               <div className="card-header">
                 <div className="flex items-center gap-2">
                   <Activity size={16} className="text-red-400" />
@@ -180,7 +184,6 @@ export default function Dashboard() {
               </div>
               <AlertPanel alerts={alerts} onRefresh={fetchAll} userRole={user?.role || 'user'} />
             </div>
-          )}
         </div>
       </div>
     </Layout>
